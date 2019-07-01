@@ -1,6 +1,7 @@
 ## 출처
 https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started-concepts.html#_node
 
+# Basic Concepts
 ## Near Realtime(NRT)
 * 엘라스틱 서치는 거의 실시간 검색 플랫폼이다.
 * 거의 1초의 매우 얕은 레이턴시로 도큐먼트의 인덱스가 검색이 가능해지도록 할 수 있다.
@@ -39,7 +40,7 @@ https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started-
 * index를 만들 때, 단순히 shards의 갯수를 지정해주면 된다.
 * 각각의 shard는 그 자체로 클러스터의 모든 노드에서 호스팅할 수 있는 fully-functional하고 독립적인 index이다.
 * 샤드는 2가지의 이유로 중요하다 :
-```JAVA
+```TEXT
  - 볼륨을 수평적으로 분할/스케일링 할 수 있음.
  - 샤드 간 분배 및 병렬 수행을 제공하므로, 처리 성능을 향상시킨다.
 ```
@@ -47,7 +48,7 @@ https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started-
 * 네트워크/클라우드 환경에서 실패는 항상 일어날 수 있으므로, shard/node가 offline이 되거나 알 수 없는 이유로 데이터 유실에 대해서 failover 메커니즘을 갖는게 강력히 추천된다.
 * Elasticsearch는 index의 shard를 1개 이상의 복제본을 replica shard(줄여서 replica)에 저장한다.
 * 복제는 2가지 이유로 중요하다 :
-```JAVA
+```TEXT
  - shard/node 실패시 고 가용성을 제공한다. 이를위해, replica shard는 절대로 같은 original/primary shard와 같은 노드에 위치해서는 안된다.
  - 검색은 모든 replicas에서 병렬로 수행되므로, 검색 볼륨/성능을 scale out 할 수 있게 해준다.
 ```
@@ -59,6 +60,69 @@ https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started-
 * 이미 존재하는 index에 대한 shard의 갯수를 _shrink와 _split API로 변경할 수 있지만, 간단한 작업이 아니기 때문에 사전에 정확한 shard의 갯수를 설정하는게 베스트 프랙티스 이다.
 * 클러스터에 최소한 2개의 노드라면, 기본적으로 각각의 index는 1개의 shard와 1개의 replica로 구성된다.
 * 각각의 Elasticsearch shard 는 Lucene index 이기 때문에 Lucene 에서 허용하는 최대값을 따른다. [LUCENE-5843](https://issues.apache.org/jira/browse/LUCENE-5843) 을 확인해보면, 최대값은 2,147,483,519 이다.
+
+
+# Installation
+
+## Install on Linux OS
+```TEXT
+ - wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.2.0-linux-x86_64.tar.gz
+ - tar -xzf elasticsearch-7.2.0-linux-x86_64.tar.gz
+```
+## Enable automatic creation of X-pack indices
+* X-pack은 Elasticsearch에서 여러 지수들을 자동으로 만들어낸다.
+* default로 Elasticsearch는 자동 index creation을 설정하도록 허용되어있으며, 다른 스텝은 필요없다.
+* 이를 disable하려면, elasticsearch.yml에서 action.auto_create_index를 설정해야한다.
+```TEXT
+ - Logstach나 Beats를 이용한다면, action.auto_create_index 에 추가적인 설정이 필요하다. 하지만 정확한 환경변수를 모른다면, *로 셋팅하는것도 고려할 만 하다.
+```
+## Running Elasticsearch from the command line
+```TEXT
+ - ./bin/elasticsearch
+```
+## Checking that Elasticsearch is running
+```TEXT
+ - GET /
+```
+```TEXT
+ {
+  "name" : "Cp8oag6",
+  "cluster_name" : "elasticsearch",
+  "cluster_uuid" : "AT69_T_DTp-1qgIJlatQqA",
+  "version" : {
+    "number" : "7.2.0",
+    "build_flavor" : "default",
+    "build_type" : "tar",
+    "build_hash" : "f27399d",
+    "build_date" : "2016-03-30T09:51:41.449Z",
+    "build_snapshot" : false,
+    "lucene_version" : "8.0.0",
+    "minimum_wire_compatibility_version" : "1.2.3",
+    "minimum_index_compatibility_version" : "1.2.3"
+  },
+  "tagline" : "You Know, for Search"
+}
+```
+
+## 기타 특이사항
+```TEXT
+ - daemon으로 실행
+ - ./bin/elasticsearch -d -Ecluster.name=my_cluster -Enode.name=node_1 와 같이 command line으로 설정을 로드할 수 있지만,
+ - cluster.name이나 node.named 을 따로 설정해서 elasticsearch.yml config 파일로 관리
+ - 로그는 $ES_HOME/logs/ 에 있다. (추후 관리할때 수정하자)
+```
+## Directory layout of archives
+| Type                   | Description                             | Default Location | Setting |
+| --------------------------- |---------|---------|:-------------------------------------:|
+| home | Elasticsearch home directory or $ES_HOME |Directory created by unpacking the archive| |
+| bin  | Binary scripts including elasticsearch to start a node and elasticsearch-plugin to install plugins|$ES_HOME/bin||
+| conf | Configuration files including elasticsearch.yml|$ES_HOME/config| ES_PATH_CONF|
+| data | The location of the data files of each index / shard allocated on the node. Can hold multiple locations. |$ES_HOME/data| path.data|
+| logs | Log files location. |$ES_HOME/logs| path.logs|
+| plugins | Plugin files location. Each plugin will be contained in a subdirectory. |$ES_HOME/pluginse| |
+| repo |Shared file system repository locations. Can hold multiple locations. A file system repository can be placed in to any subdirectory of any directory specified here. |Not configured| path.repo|
+| script | Location of script files. |$ES_HOME/scripts| path.scripts|
+
 
 
 
