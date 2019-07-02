@@ -126,3 +126,48 @@ https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started-
 
 
 
+# Configurling Elasticsearch
+Elasticsearch는 기본 구성이 좋으며, 적은 구성을 요구한다. 대부분의 설정은 운영중인 클러스터에서 API로 수정될 수 있다.
+```JAVA
+ Cluster Update Settings
+ 
+ GET /_cluster/settings
+ 
+ //영구적으로 업데이트 - 재시작 이후 적용가능
+ PUT /_cluster/settings
+{
+    "persistent" : {
+        "indices.recovery.max_bytes_per_sec" : "50mb"
+    }
+}
+
+// 일시적으로 업데이트
+PUT /_cluster/settings?flat_settings=true
+{
+    "transient" : {
+        "indices.recovery.max_bytes_per_sec" : "20mb"
+    }
+}
+ 
+ // null로 초기화 및 wildcard 가능
+ PUT /_cluster/settings
+{
+    "transient" : {
+        "indices.recovery.*" : null
+    }
+}
+ 
+```
+## Order of Precedence
+1. 일시적 클러스터 셋팅
+2. 영구 셋팅
+3. elasticsearch.yml 셋팅
+
+* settings API로 cluster-wide하게 설정하는편이 나으며, elasticsearch.yml은 local 설정시에만 사용하도록 권유.
+* 실수릉 방지할 수 있으며, API는 전체 클러스터에 동일하게 적용되기 때문.
+
+
+
+
+
+
