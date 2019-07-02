@@ -164,8 +164,19 @@ PUT /_cluster/settings?flat_settings=true
 3. elasticsearch.yml 셋팅
 
 * settings API로 cluster-wide하게 설정하는편이 나으며, elasticsearch.yml은 local 설정시에만 사용하도록 권유.
-* 실수릉 방지할 수 있으며, API는 전체 클러스터에 동일하게 적용되기 때문.
+* 실수를 방지할 수 있으며, API는 전체 클러스터에 동일하게 적용되기 때문.
 
+
+## Config files location
+* 엘라스틱 서치는 3개의 설정파일이 있다.
+ - 엘라스틱서치 설정용인 elasticsearch.yml
+ - JVM 설정용 jvm.options
+ - logging을 위한 log4j2.properties
+
+* 설정 
+
+
+## Order of Precedence
 
 
 
