@@ -302,4 +302,31 @@ path:
 - 노드들 간 통신하기 위한 포트
 - http.port: 9200-9300  (default)
 ```
+## Discovery and cluster formation settings
+클러스터 내 노드가 서로를 찾아내고, master 노드를 선출하기 위해서는 해당 셋팅이 우선되어야 한다.
+### discovery.seed_hosts
+* discovery.seed_hosts 는 클러스터 내 ***마스터로 선출 가능한 모든 주소***를 가져야한다.
+```TEXT 
+- 네트워크 구성이 없는 상태에서, elasticsearch는 가능한 loopback 주소에 바인딩하고, 9300-9305 포트를 검색해서 동일한 서버에 실행중인 노드에 연결을 시도한다.
+- 이는 어떠한 설정 없이 자동으로 클러스터링을 제공한다.
+- 다른 호스트에 있는 노드로 클러스터를 구성하고 싶다면, discovery.seed_hosts 를 이용해야하며, 이는 discovery process를 시드(?) 하기 위해서 살아있고 접속 가능한 master를 선출가능하게 한다. ( https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-discovery-hosts-providers.html )
+- discovery.seed_hosts 는 클러스터 내 마스터로 선출 가능한 모든 주소를 가져야한다.
+- 배열이나 컴마로 나열된 호스트도 가능
+- host:port 나 host(transport.profiles.default.port가 기본값이며, 설정이 안되어있다면 다시 transport.port로 설정됨) 
+```
+### cluster.initial_master_nodes
 
+```TEXT 
+- 맨 처음 elasticsearch를 구동할 때, cluster bootstrapping step이 있으며, 이는 투표 된 matser선출 가능한 노드를 판별해준다.
+- 개발 모드이며 discovery settings가 구성되지 않았을때, 이 스텝은 노드 자신들이 자동으로 수행한다.
+- 이는 불안정하기에, production mode로 구동할때에는, 첫번째 선거에서 master 노드를 선출할 수 있도록 cluster.initial_master_nodes 셋팅을 해야한다.
+
+discovery.seed_hosts:
+   - 192.168.1.10:9300
+   - 192.168.1.11 
+   - seeds.mydomain.com 
+cluster.initial_master_nodes: 
+   - master-node-a
+   - master-node-b
+   - master-node-c
+```
