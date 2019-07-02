@@ -169,14 +169,69 @@ PUT /_cluster/settings?flat_settings=true
 
 ## Config files location
 * 엘라스틱 서치는 3개의 설정파일이 있다.
- - 엘라스틱서치 설정용인 elasticsearch.yml
- - JVM 설정용 jvm.options
- - logging을 위한 log4j2.properties
+1. 엘라스틱서치 설정용인 elasticsearch.yml
+2. JVM 설정용 jvm.options
+3. logging을 위한 log4j2.properties
 
-* 설정 
+* 설정 파일 경로의 default는 $ES_HOME/config 이며, $ES_PATH_CONF를 변경해서 수정 가능하다.
+- ES_PATH_CONF=/path/to/my/config ./bin/elasticsearch
+
+* config 디렉토리 위치는 default가 /etc/elasticsearch이며, 이것 또한 $ES_PATH_CONF 로 수정 가능하다.
+
+## Config file format
+설정 포맷은 YAML 이다.
+```TEXT
+ YAML ( http://serious-code.net/doku/doku.php?id=kb:yamltutorial )
+ 1. 기본구조
+ - 부모 자식의 구분은 들여쓰기를 통해 이루어진다.
+ parent :
+     childe-1 : first child
+         grandchild-1 : first grand child
+ 2. 노드
+ - 하나의 노드는 기본저긍로 key:value 페어이다.
+ 3. 주석
+ - # 으로 주석 가능
+ 4. 앵커/알리아스
+ - 반복되는 값은 앵커 및 알리아스를 통해 줄일 수 있다.
+```
+
+```TEXT
+ path:
+   data: /var/lib/elasticsearch
+   logs: /var/log/elasticsearch
+ 
+ 혹은
+ path.data: /var/lib/elasticsearch
+ path.logs: /var/log/elasticsearch
+   
+```
+## Environment variable substitution
+
+```TEXT
+ node.name: ${HOSTNAME}
+ network.host: ${ES_NETWORK_HOST}
+    
+```
 
 
-## Order of Precedence
+# Setting JVM options
+JVM 설정을 건드릴 일이 잘 없지만, 한다면 heap size 변경일거다.
+
+## Setting the heap size
+* Default : 1GB (max/min)
+* jvm.options를 바라보는데, Xms와 Xmx를 특히나 동일하게 셋팅을 권장.
+* RAM 가용량에 따라 달라짐.
+```TEXT
+ - Xmx와 Xms를 50% 이상 차지하지않도록 해야한다. Elasticsearch는 JVM heap 외에도 메모리를 필요로한다.(네트워킹을 위한 off-heap buffers, files에 접근하기 위한 OS filesystem cache, JVM 자기자신)
+ - JVM compressed oops threashold(대략 32GB)보다 낮게 Xmx, Xms 설정
+  : heap size [1.9gb], compressed ordinary object pointers [true] 로그로 확인 가능
+ - -XX:+UnlockDiagnosticVMOptions -XX:+PrintCompressedOopsMode 등의 옵션 있음... 추후 확인
+ 
+ - jvm.options에 -Xms2g -Xmx2g 설정가능.
+ - 환경변수로도 가능하다
+   : ES_JAVA_OPTS="-Xms2g -Xmx2g" ./bin/elasticsearch
+   : ES_JAVA_OPTS="-Xms4000m -Xmx4000m" ./bin/elasticsearch
+```
 
 
 
