@@ -221,6 +221,7 @@ JVM 설정을 건드릴 일이 잘 없지만, 한다면 heap size 변경일거�
 * Default : 1GB (max/min)
 * jvm.options를 바라보는데, Xms와 Xmx를 특히나 동일하게 셋팅을 권장.
 * RAM 가용량에 따라 달라짐.
+
 ```TEXT
  - Xmx와 Xms를 50% 이상 차지하지않도록 해야한다. Elasticsearch는 JVM heap 외에도 메모리를 필요로한다.(네트워킹을 위한 off-heap buffers, files에 접근하기 위한 OS filesystem cache, JVM 자기자신)
  - JVM compressed oops threashold(대략 32GB)보다 낮게 Xmx, Xms 설정
@@ -232,8 +233,73 @@ JVM 설정을 건드릴 일이 잘 없지만, 한다면 heap size 변경일거�
    : ES_JAVA_OPTS="-Xms2g -Xmx2g" ./bin/elasticsearch
    : ES_JAVA_OPTS="-Xms4000m -Xmx4000m" ./bin/elasticsearch
 ```
+## JVM Options
+* - 로 시작하면 JVM version과 독립적으로 취급
+* 8:-Xmx2g 의 의미는, JVM이 8일때만 적용시킴.
+* 8-:-Xmx2g (버젼8이상) / 8-9:-Xmx2g (범위 내의 버젼)
+* 환경변수로도 설정 가능
+```TEXT
+ export ES_JAVA_OPTS="$ES_JAVA_OPTS -Djava.io.tmpdir=/path/to/temp/dir" ./bin/elasticsearch
+```
+* JAVA_OPTS를 보통 제공하지만, elasticsearch는 ***jvm.option 혹은 ES_JAVA_OPTS*** 로만 JVM 옵션을 다룬다.
 
+# Secure Settings
+# Logging configuration
+# Auditing settings (X-pack)
+# Cross-cluster replictaion settings (X-pack)
+# Index lifecycle management settings (X-pack)
 
+# Important Elasticsearch configuration
+## path.data and path.log
+* .zip, .tar.gz 등으로 설치하면, default에 중요한 폴더들이 생긴다.
+* 이는 Elasticsearch를 새로운 버젼으로 업그레이드 시 삭제가 될 가능성이 크다.
+* 아래와같이 변경할 수 있다.
+```TEXT
+ path:
+  logs: /var/log/elasticsearch
+  data: /var/data/elasticsearch
+```
+* 특히 path.data 설정은 여러개의 경로로도 가능하다.
+```TEXT
+path:
+  data:
+    - /mnt/elasticsearch_1
+    - /mnt/elasticsearch_2
+    - /mnt/elasticsearch_3
+```
 
-
+## cluster.name
+* 노드는 cluster.name을 공유할 때 cluster에 속할 수 있따.
+```TEXT
+ cluster.name: logging-prod
+```
+## node.name
+* elasticsearch.yml에서 변경가능
+```TEXT
+ node.name: prod-data-2
+```
+## Network setting
+* network.host
+```TEXT 
+( https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-network.html#network-interface-values )
+- IP주소 혹은 hostname, _[networkInterface]_, _local_, _site_, _global_
+- network.host: 192.168.1.10   (default==local)
+```
+* discovery.seed_hosts
+```TEXT 
+- cluster에 join하기 위해선, 적어도 몇개의 다른 클러스터 내 노드들의 IP 혹은 호스트명을 알아야한다.
+- 접속할 initial node 정보를 이 옵션으로 제공
+- IP, hostname 허용
+- discovery.seed_hosts: ["127.0.0.1", "[::1]"]  (default)
+```
+* http.port
+```TEXT 
+- incoming HTTP request를 바인딩 할 포트.
+- http.port: 9200-9300  (default)
+```
+* transport.port
+```TEXT 
+- 노드들 간 통신하기 위한 포트
+- http.port: 9200-9300  (default)
+```
 
