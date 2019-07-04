@@ -234,7 +234,7 @@ JVM 설정을 건드릴 일이 잘 없지만, 한다면 heap size 변경일거�
    : ES_JAVA_OPTS="-Xms4000m -Xmx4000m" ./bin/elasticsearch
 ```
 ## JVM Options
-* - 로 시작하면 JVM version과 독립적으로 취급
+*  '-' 로 시작하면 JVM version과 독립적으로 취급
 * 8:-Xmx2g 의 의미는, JVM이 8일때만 적용시킴.
 * 8-:-Xmx2g (버젼8이상) / 8-9:-Xmx2g (범위 내의 버젼)
 * 환경변수로도 설정 가능
@@ -330,3 +330,62 @@ cluster.initial_master_nodes:
    - master-node-b
    - master-node-c
 ```
+```TEXT 
+network.host: dev-kbs-elastic001-ncl
+discovery.seed_hosts: ["dev-kbs-elastic002-ncl", "dev-kbs-elastic003-ncl"]
+cluster.initial_master_nodes: ["kbs-ela-1", "kbs-ela-2", "kbs-ela-3"]
+```
+
+
+# Clustering
+## Discovery
+```TEXT 
+- 클러스터 형성 모듈이 클러스터 내에서 다른 노드를 찾은 과정을 discovery라 한다.
+- 엘라스틱 노드가 실행될때 진행
+- master node가 죽고, 새 마스터를 선출할 때
+- discovery.seed_hosts 로 제공된 seed 주소들로 부터 시작된다.
+- 이는 2가지 단계로 진행된다
+    : 각 노드는 각 주소로 연결한 다음, 어떤 노드가 연결되었는지를 판단하여 seed 주소를 조사한다.
+    : 마스터 선출가능한 모든 peer 목록을 remote 노드들과 공유하며, 원격 노드들은 자신의 동료들과 차례대로 응답한다. - 연쇄작용 하는듯.
+- 찾은 노드가 master 선출가능하면, 멈추고 아니라면 계속 찾는다.
+- 만약 마스터 노드를 못찾았다면, discovery.find_peers_interval (default 1) 이후 다시 시도한다.
+- 노드가 마스터 선출가능하면, discovery를 계속 하는데, 선출된 마스터를 찾거나 투표를 할 수 있을 정도의 마스터 선출가능 노드들을 찾을때까지 한다. (못찾았으면 discovery.find_peers_interval (default 1) 이후 다시한다.
+```
+### Seed hosts providers
+```TEXT 
+- 클러스터 형성 모듈은 default로 2개의 seed hosts providers를 see nodes로 셋팅하도록 한다.
+- discovery.seed_providers 로 셋팅된다
+- 각 시드 호스트는 IP주소나 host명을 제공한다.
+- 호스트명을 제공한다면, DNS lookup으로 IP를 찾게된다.
+- 호스트명이 여러 IP로 구성되었다면, 모든 주소에서 seed node를 찾게된다.
+- 정확한 TCP port를 주지 않는다면, 암묵적으로 port 범위중 가장 처음 port를 이용한다.(transport.profiles.default.port 또는 transport.port로 제공된)
+- transport.profiles.default.port 가 제공되지 않으면, discovery.seed_resolver.max_concurrent_resolvers (10) 개의 concurrent lookup을 하며, 각 timeout은 discovery.seed_resolver.timeout (5초) 이다.
+discovery.seed_hosts:
+   - 192.168.1.10:9300
+   - 192.168.1.11 
+   - seeds.mydomain.com 
+
+- 여러 IP라면 모두 다 연결 시도.
+```
+```TEXT 
+- file based로 가능
+ discovery.seed_providers: file
+- 파일이 변경되면 Elasticsearch는 자동으로 reload해서 동적으로 설정 가능!
+- 도커에서, 컨테이너가 추가돼 IP가 추가되었을때 유용하게 쓰일수있다.
+- $ES_PATH_CONF/unicast_hosts.txt 에 작성
+- 파일형식
+10.10.10.5
+10.10.10.6:9305
+10.10.10.5:10005
+# an IPv6 address
+[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:9301
+
+
+- 역시나 port가 지정되지 않는다면, transport.profiles.default.port 나 transport.port 로 정해진 값으로 지정한다(port range중)
+- 질문) 3대의 노드, 각각에 transport.profiles.default.port 설정 X 일 때,
+   다른데서 지정해주면 그걸 쓰게될까요..? ex) 1.1.1.1:9301을 1번째 node에서 지정, 2번 node의 IP가 1.1.1.1 일때
+  
+```
+
+
+
