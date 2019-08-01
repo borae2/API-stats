@@ -8,7 +8,7 @@ https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started-
 
 ## Cluster
 * 클러스터는 1개 이상의 노드(서버)의 집합이다. 
-* 모든 데이터를 모으고, 연합 익덱싱을 제공해서 전체 노드에서 검색을 가능하게 한다.
+* 모든 데이터를 모으고, 연합 인덱싱을 제공해서 전체 노드에서 검색을 가능하게 한다.
 * 유니크한 이름으로 클러스터는 구분 가능하다.(default는 elasticsearch)
 * 같은 클러스터 이름은 잘못된 노드 연결을 야기한다.
 * 싱글노드도 가능하다.
@@ -30,7 +30,7 @@ https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started-
 
 ## Document
 * indexed 될 수 있는 기본 단위의 정보.
-* document는 ***JSON***으로 표현됨
+* document는 ***JSON*** 으로 표현됨
 * 1개의 index에서, 원하는만큼 많은 document를 저장할 수 있다.
 
 ## Shards & Replicas
@@ -108,7 +108,7 @@ https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started-
 ```TEXT
  - daemon으로 실행
  - ./bin/elasticsearch -d -Ecluster.name=my_cluster -Enode.name=node_1 와 같이 command line으로 설정을 로드할 수 있지만,
- - cluster.name이나 node.named 을 따로 설정해서 elasticsearch.yml config 파일로 관리
+ - cluster.name이나 node.name 을 따로 설정해서 elasticsearch.yml config 파일로 관리
  - 로그는 $ES_HOME/logs/ 에 있다. (추후 관리할때 수정하자)
 ```
 ## Directory layout of archives
@@ -331,7 +331,7 @@ cluster.initial_master_nodes:
    - master-node-c
 ```
 ```TEXT 
-network.host: dev-kbs-elastic001-ncl
+network.host: 0.0.0.0
 discovery.seed_hosts: ["dev-kbs-elastic002-ncl", "dev-kbs-elastic003-ncl"]
 cluster.initial_master_nodes: ["kbs-ela-1", "kbs-ela-2", "kbs-ela-3"]
 ```
@@ -388,4 +388,47 @@ discovery.seed_hosts:
 ```
 
 
+# ElasticSearch 맛보기
+## 장점
+### 오픈소스 검색엔진
+- 아파치 루씬을 기반으로 개발된 오픈소스 검색엔진이며, 약 2억 5천만번 이상 다운로드 될 정도로 popular
+
+### 전문 검색
+- 대부분의 RDBMS는 기본 쿼리 및 색인 구조의 한계로 기본적인 텍스트 검색 기능만 제공
+- 전문 검색이란, 내용 전체를 색인해서 특정 단어가 포함된 문서를 찾음을 의미.
+
+### 통계 분석
+- 키바나로 시각화/분석 가능
+
+### 스키마리스
+- DB는 스키마라는 구조에 따라 데이터를 변형
+- 엘라스틱서치는 정형화되지 않은 다양한 형태의 문서도 자동으로 색인 및 검색 가능
+
+### RESTful API
+- RESTful API 및 JSON형식을 사용해서, 개발언어, OS, system에 관계없이 사용 가능
+
+### 멀티테넌시
+- 상이한 인덱스라도 필드명만 같으면 여러 개의 인덱스를 한번에 조회할 수 있음.
+
+### Document-Oriented
+- 여러 계층의 데이터를 JSON 형식의 구조화된 문서로 인덱스에 저장 가능.
+
+### 역색인
+엘라스틱서치 : 1 <br>
+검색엔진 : 1,2 <br>
+역색인 : 2,3 <br>
+데이터베이스 : 3
+- 검색엔진을 검색할 때, 일반적으론 전체를 스캔하지만, 역색인 구조는 단어만 찾으면 포함된 문서의 위치를 알 수 있어서 빠르다!
+
+## 약점
+### 실시간이 아니다.
+- 일반적으로 색인된 데이터는 통상적으로 1초 뒤에 검색 가능.
+- 커밋과 플러시를 거침
+
+### 트랜잭션과 롤백 기능을 제공하지 않음.
+- ES는 분산 시스템으로 구성됨. 클러스터의 성능 향상을 위해 시스템적으로 비용이 큰 롤백과 트랜잭션을 지원하지 않으므로,
+- 데이터 손실의 위험이 있음.
+
+### 데이터의 업데이트를 제공하지 않음.
+- 데이터를 삭제하고, 추가를 시킴.
 
