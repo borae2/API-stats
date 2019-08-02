@@ -26,8 +26,31 @@
 ## 초기 마스터 노드명
 * cluster.initial_master_nodes: ["adp-ela-1", "adp-ela-2", "adp-ela-3"]
 
+## RAM memory lock을 통한 swap out 방지
+* bootstrap.memory_lock: true
+```TEXT
+  OS에서 file system cache를 swap out 하는걸 방지하기 위한 설정
+  swapping을 하면 몇분간 GC가 일어날 수도 있음.
+  
+  GET _nodes?filter_path=**.mlockall 로 확인가능
+(https://www.elastic.co/guide/en/elasticsearch/reference/7.1/setup-configuration-memory.html#bootstrap-memory_lock)
+```
+```TEXT
+ [2019-08-01T21:59:11,498][WARN ][o.e.b.JNANatives         ] [kbs-ela-1] These can be adjusted by modifying /etc/security/limits.conf, for example:
+        # allow user 'irteam' mlockall
+        irteam soft memlock unlimited
+        irteam hard memlock unlimited
+
+OS에서 irteam 에 대해서 memlock이 풀려있는지 확인이 필요함.
+https://wiki.navercorp.com/display/SFP/ElasticSearch+-+elasticsearch.yml
+```
 
 
+
+# jvm.options
+## JVM 설정은 Xms와 Xmx를 같게
+* -Xms2g
+* -Xmx2g
 
 # unicast_hosts.txt
 ## 마스터 선출을 위한 시드 제공자 파일
