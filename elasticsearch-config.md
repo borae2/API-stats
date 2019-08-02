@@ -61,3 +61,17 @@ https://wiki.navercorp.com/display/SFP/ElasticSearch+-+elasticsearch.yml
   호스트가 추가되면, 파일에 추가함으로서 수정 가능
  
 ```
+
+
+# 클러스터 설정 관련 REST API
+## 클러스터 health check
+* http://10.106.147.41:9200/_cluster/health?pretty=true
+
+## 노드 정보
+* http://10.106.147.41:9200/_nodes/process
+
+## 노드 용량 확인
+* http://10.106.147.41:9200/_cat/nodes?h=dup
+
+## 메모리 lock 여부 확인
+* http://10.106.147.41:9200/_nodes?filter_path=**.mlockall
