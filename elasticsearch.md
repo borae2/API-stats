@@ -67,6 +67,7 @@ https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started-
 ## Install on Linux OS
 ```TEXT
  - wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.2.0-linux-x86_64.tar.gz
+ - wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.1.1-linux-x86_64.tar.gz
  - tar -xzf elasticsearch-7.2.0-linux-x86_64.tar.gz
 ```
 ## Enable automatic creation of X-pack indices
