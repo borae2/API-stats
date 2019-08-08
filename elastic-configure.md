@@ -1,7 +1,19 @@
 # 클러스터 설정
 ## 1. Master node와 Data node
 ### Master node
-
+* 가벼운 작업을 담당 : index create/delete, 클러스터 내 노드 트래킹, 샤드 분배 등.
+* ***stable한 master node*** 를 갖는게 cluster 구성에 중요하다.
+* indexing과 검색은 CPU, memory, I/O를 사용하므로 노드 리소스에 부하를 줄 수 있다.
+* 큰 클러스터 환경에서는 role을 분리하는것이 좋은 전략이다.
+```TEXT
+node.master: true 
+node.voting_only: false 
+node.data: false 
+node.ingest: false 
+node.ml: false 
+xpack.ml.enabled: true 
+cluster.remote.connect: false 
+```
 
 ### Data node
 
