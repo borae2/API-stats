@@ -354,7 +354,7 @@ cluster.initial_master_nodes: ["kbs-ela-1", "kbs-ela-2", "kbs-ela-3"]
 ```
 ### Seed hosts providers
 ```TEXT 
-- 클러스터 형성 모듈은 default로 2개의 seed hosts providers를 see nodes로 셋팅하도록 한다.
+- 클러스터 형성 모듈은 default로 2개의 seed hosts providers를 seed nodes로 셋팅하도록 한다.
 - discovery.seed_providers 로 셋팅된다
 - 각 시드 호스트는 IP주소나 host명을 제공한다.
 - 호스트명을 제공한다면, DNS lookup으로 IP를 찾게된다.
