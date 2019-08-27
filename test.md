@@ -1,56 +1,53 @@
-## Node Query Cache
-* 쿼리 결과를 캐싱
-* 모든 노드가 공유하는 1개의 쿼리 캐시가 있다. (쿼리용 캐시가 1개이다)
-* eviction에 LRU를 씀.
-* 캐싱된 데이터를 볼 수는 없다.
-* 아래 설정은 클러스터 내 모든 data node에 설정되어야함.
+# 개요
+* fielddata cache는 모든 field value를 메모리에 올린다.
+* 이 때, field value는 무엇을 뜻하는가
+* document 내의 field - type 값인가,
+* document 내의 field 와 그 value 인가. (도큐먼트 전체와 내용과 같은..)
+
+## Fielddata
+* https://www.elastic.co/guide/en/elasticsearch/reference/7.1/modules-fielddata.html
+* field data cache는 소팅이나 집계에 쓰인다.
+* 모든 field values 를 메모리에 올려서, 해당 값들에 빠른 도큐먼트 기반 접근을 제공한다.
+* field를 빌드하기엔 field data cache가 비싸서, 충분히 메모리를 할당하자.
+
+## fielddata (책)(6점대)
+* fielddata는 엘라스틱서치가 힙 공간에 생성하는 메모리 캐시다.
+* 과거에는 많이 사용했지만, 메모리 부족 현상과 잦은 GC로 현재는 거의 사용되지 않음.
+* 최신 버젼은 doc_values 라는 새로운 형태의 캐시를 제공하고있으며, text 타입의 필드를 제외한 모든 필드는 기본적으로 doc_values 캐시를 사용한다.
+* fielddata를 사용해야만 하는 경우도 있다.
 ```TEXT
-- indices.queries.cache.size (default 10%)
-- 5%, 512mb와 같이도 설정 가능.
+- text 타입의 필드는 기본적으로 분석기에 의해 형태소 분석이 되기 때문에 집계나 정렬 등의 기능을 수행할 수 없음.
+- 부득이하게 text 타입의 필드에서 집게나 정렬을 수행할 경우, fielddata를 사용할 수 있다.
+- 하지만, 메모리에 생성되는 캐시이므로 최소한으로 사용해야 한다.
 ```
+* fielddata는 메모리 소모가 크기 때문에 기본적으로 비활성화돼 있다.
 
-* 아래 설정은 **index** 별로 설정 가능.
-```TEXT
-- index.queries.cache.enabled (default true)
-- query caching enable 여부
-```
-
-## Shard request cache
-* 검색 요청이 들어오면 (1개 혹은 여러 인덱스), 각 포함된 샤드는 로컬에서 검색을 실행하고, 코디네이팅 노드로 전달한다.
-* 그 코디네이팅 노드는 gather 해서 global result set 만듦.
-* 샤드 레벨 리퀘스트 캐시는, 각 샤드의 로컬 결과물을 캐싱함.
-* 이는 빈번하거나 무거운 검색 요청을 거의 즉시 반환할 수 있게 함.
-* 리퀘스트 캐시는 logging과 같은 사용성에서 좋다. 왜냐면 최근 거만 업데이트 되고, 옛날 거는 캐시에서 바로 가져올수 있으니까!
-
-```TEXT
-- 기본적으로, requests cache는 size=0인 결과만 캐싱한다.
-- 그러므로, hits는 캐시하지 않지만,
-- hits.total, 집계, suggestions는 캐싱을 하게된다.
-```
+## 집계 관련
+* 집계에서, 예시로 든 것이, field : movie_no , aggs - sum - field : ratings 로서,
+* 결과에 대해서, 일치하는 "필드명" 들을 모아서 처리를(집계를) 한다.
+* 바로 이후 소개되는 캐시들 중, 필드 데이터 캐시가 나오며, 모든 필드 값을 메모리에 올리는데, 위의 일치하는 필드명 으로 보인다.
 
 
-### Cache invalidation
-* 데이터가 변경된 경우에만, 샤드가 refresh될 때 캐시가 삭제된다.
-* cache clear API로 만료시킬 수 있음. (링크 참조)
+## fielddata
+* https://www.elastic.co/guide/en/elasticsearch/reference/7.1/fielddata.html
+* Search 는 "도큐먼트가 어떤 용어를(값을) 담고있는가" 를 묻지만,
+* 소팅이나 집계는 "이 도큐먼트의 이 field의 값은 무엇인가" 를 원한다.
 
-### Enabling and disabling caching
-* 존재하는 index에 캐시 가능여부를 추가할 수 있음. (링크 참조)
+* 대부분의 필드는 doc_values를 이용하지만, text는 사용할 수 없다.
+* 대신에, text 필드는 fielddata 라 불리는 인메모리 데이터구조를 이용한다.
+* 이 자료구조는 맨 처음 필드가 집계,소팅, 스크립트에 이용될 때 만들어진다.
+* 디스크 세그먼트의 전체 역색인 인덱스를 읽어서, term <-> document 관계로 전환하고, JVM heap 메모리에 저장한다.
 
-### Enabling and disabling caching per request
-* 쿼리 스트링 파라미터로, request_cache를 붙이면, per-request 베이스로 가능여부를 추가할 수 있다.
-* 결과를 알 수 없는 script의 경우 (랜덤 등 값이 바뀌는경우) request_cache를 false로 해야한다..!
 
-### Cache key
-* 전체 json body가 키의 역할을 한다.
-* json 순서가 다르면 인지하지 못한다.
+## doc_values
+* https://www.elastic.co/guide/en/elasticsearch/reference/7.1/doc-values.html
+* doc_values는, 역색인 구조로 인덱싱 되어서 검색에 용이하게끔 사용되는 캐시 이다.
+* 소팅, 어그리게이션, script 내에서 field values에 접근하는것은, 다른 데이터 접근 방식이다.
+* term을 찾고 documents를 찾기 보다, 도큐먼트를 look up 하고, 해당 field가 갖는 term을 찾아야 한다.
 
-### Cache settings
-* 캐시는 node level에서 관리되며, default는 1% of heap 이다.
-```TEXT
-- indices.requests.cache.size: 1%
-```
+* Doc values는 on-disk 자료구조이고, document index 타임에 만들어져서 data access pattern이 가능하게 한다.
 
-### Monitoring cache usage
-* 링크 참고..
 
-https://www.elastic.co/guide/en/elasticsearch/reference/current/shard-request-cache.html
+
+# 정리
+* 
